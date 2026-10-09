@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c4a074">
+<title>Aarzoo's jar of tiny adventures</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫙</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --kraft:#c4a074;
+  --ink:#1f2a55;
+  --ink-soft:#4b5579;
+  --make:#f7d774; --move:#f5a3b5; --learn:#a6cfe3; --care:#d3c1e0;
+  --connect:#f6bf98; --explore:#b9d9a8; --dare:#ef8a80;
+  --tape:rgba(243,230,184,.85);
+  --hand:'Special Elite','Courier Prime','Courier New',monospace;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --torn:polygon(0 3%,4% 0,11% 2%,19% .5%,27% 2.5%,36% .2%,45% 2%,53% .4%,62% 2.2%,71% .3%,79% 2%,88% .5%,95% 2.4%,100% .8%,99% 50%,100% 97%,94% 100%,86% 97.8%,77% 99.6%,68% 97.6%,59% 99.8%,50% 97.5%,41% 99.5%,32% 97.7%,23% 99.7%,14% 97.6%,6% 99.4%,0 97%,1% 50%);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;font-family:var(--hand);color:var(--ink);font-size:17px;line-height:24px;font-synthesis:none;
+  background-color:var(--kraft);
+  background-image:var(--grain),radial-gradient(ellipse at 50% 30%,rgba(255,240,215,.35),transparent 70%);
+}
+main{max-width:460px;margin:0 auto;padding:18px 18px calc(110px + env(safe-area-inset-bottom,0px));position:relative;overflow:hidden}
+button,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px dashed var(--ink);outline-offset:3px}
+[hidden]{display:none !important}
+
+/* jar screen fits the phone: no scrolling, jar shrinks to fit */
+body.fit{height:100%}
+body.fit main{height:100%;display:flex;flex-direction:column;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+body.fit header{flex:none}
+body.fit #jarView{flex:1;min-height:0;display:flex;flex-direction:column}
+body.fit .stage{flex:1;min-height:0;align-items:center;margin-top:4px;padding:2px 0}
+body.fit #jar{height:100%;width:auto;max-width:min(96vw,410px)}
+body.fit .count-wrap{flex:none}
+
+/* paper bits */
+.paper{background-color:var(--bg,#fbf8f1);background-image:var(--grain);clip-path:var(--torn)}
+.shadow{filter:drop-shadow(0 3px 3px rgba(60,35,10,.28))}
+.tape{position:absolute;width:62px;height:20px;background:var(--tape);background-image:var(--grain);
+  box-shadow:0 1px 2px rgba(60,35,10,.15);z-index:2;
+  clip-path:polygon(3% 0,97% 4%,100% 30%,96% 55%,100% 100%,2% 96%,5% 60%,0 35%)}
+
+/* title: cut-out scraps */
+header{display:flex;flex-direction:column;align-items:center;margin-top:8px;position:relative}
+header .row{display:flex;align-items:flex-end;gap:6px}
+header .bit{display:inline-block}
+header .paper{padding:2px 16px 0;font-weight:700}
+.t1{transform:rotate(-5deg)} .t1 .paper{--bg:#f5a3b5;font-size:24px;line-height:38px}
+.t2{transform:rotate(2deg);position:relative} .t2 .paper{--bg:#fbf8f1;font-size:46px;line-height:58px}
+.t3{transform:rotate(-2deg);margin-top:-4px} .t3 .paper{--bg:#f7d774;font-size:21px;line-height:34px}
+.t2 .tape{top:-9px;left:calc(50% - 31px);transform:rotate(-8deg)}
+
+/* tabs as paper tags */
+.tabs{display:flex;gap:14px;justify-content:center;margin:16px 0 0}
+.tab{border:0;background:none;padding:0}
+.tab span{display:block;padding:1px 16px;font-size:22px;--bg:#e9e3d6}
+.tab:nth-child(1){transform:rotate(-2deg)} .tab:nth-child(2){transform:rotate(2deg)}
+.tab[aria-selected="true"] span{--bg:#fbf8f1;font-weight:700}
+.tab[aria-selected="false"]{opacity:.75}
+
+/* the jar stage */
+.stage{position:relative;display:flex;justify-content:center;margin:18px -18px 0;padding:10px 0;
+  background:radial-gradient(closest-side,rgba(255,246,228,.85),rgba(255,246,228,.35) 60%,transparent)}
+.scrap-bg{position:absolute;z-index:0}
+.scrap-bg.a{--bg:#e6eef4;width:72%;height:78%;left:6%;top:6%;transform:rotate(-5deg);
+  background-image:var(--grain),repeating-linear-gradient(to bottom,transparent 0 17px,#b9cde0 17px 18px)}
+.scrap-bg.b{--bg:#f3d9cf;width:46%;height:44%;right:4%;bottom:4%;transform:rotate(7deg)}
+.scrap-bg.c{--bg:#fbf8f1;width:30%;height:24%;left:2%;bottom:10%;transform:rotate(-12deg)}
+#jar{position:relative;z-index:1;width:min(90vw,380px);height:auto;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#jar:focus-visible{outline:none}
+#jar:focus-visible .cut{stroke:#ffe27a}
+#jar.shake{animation:shake .6s ease-in-out;transform-origin:50% 90%}
+@keyframes shake{0%,100%{transform:rotate(0)}15%{transform:rotate(-8deg) translateY(-6px)}35%{transform:rotate(7deg)}55%{transform:rotate(-5deg) translateY(-3px)}75%{transform:rotate(3deg)}}
+
+.count-wrap{display:flex;justify-content:center;margin-top:2px;position:relative;z-index:2}
+.count{margin:0;padding:2px 12px;font-size:12.5px;line-height:18px;--bg:#fbf8f1;transform:rotate(-1.5deg)}
+
+.pick-wrap{display:flex;justify-content:center;margin-top:16px}
+.pick{border:0;background:none;padding:0;transform:rotate(1.5deg);transition:transform .15s}
+.pick span{display:block;padding:4px 32px;font-size:34px;font-weight:700;--bg:var(--make)}
+.pick:active{transform:rotate(1.5deg) scale(.96)}
+.pick:disabled{opacity:.45;cursor:not-allowed}
+
+/* icon buttons */
+.bar{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:8;display:flex;justify-content:center;gap:22px;pointer-events:none}
+.icon-btn{
+  position:relative;pointer-events:auto;width:52px;height:52px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;
+  background-color:#fbf8f1;background-image:var(--grain);color:var(--ink);
+  box-shadow:0 3px 6px rgba(60,35,10,.3);
+}
+.icon-btn svg{width:24px;height:24px}
+
+.book-btn{background-color:#a6cfe3}
+.book-btn .badge{position:absolute;top:2px;right:2px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#1f2a55;color:#fff;
+  font:700 12px/18px system-ui,sans-serif;display:none}
+.book-btn.has .badge{display:block}
+.done-head{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 22px}
+.done-head h2{margin:0;font-size:26px;font-weight:400}
+.back{background:none;border:0;padding:0;font-size:15px;text-decoration:underline;color:var(--ink)}
+.label-btn{background-color:#f7d774}
+.label-btn .dot{position:absolute;top:8px;left:8px;width:9px;height:9px;border-radius:50%;background:#d64545;display:none}
+.label-btn.on .dot{display:block}
+
+/* label panel */
+.scrim{position:fixed;inset:0;background:rgba(40,25,10,.3);z-index:11;opacity:0;pointer-events:none;transition:opacity .3s}
+.scrim.open{opacity:1;pointer-events:auto}
+.panel{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:480px;z-index:12;transform:translateY(105%);transition:transform .35s ease;
+  filter:drop-shadow(0 -4px 8px rgba(60,35,10,.3))}
+.panel.open{transform:none}
+.panel .sheet-in{max-height:82vh;overflow-y:auto;padding:26px 22px calc(24px + env(safe-area-inset-bottom,0px));--bg:#fbf8f1}
+.panel h2{margin:0;font-size:24px;line-height:32px;font-weight:400}
+.panel-close{position:absolute;top:18px;right:16px;border:0;background:none;font-size:30px;line-height:1;padding:4px;color:var(--ink)}
+.group{margin-top:10px}
+.group h3{margin:0 0 4px;font-size:15px;font-weight:400;color:var(--ink-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:15px;line-height:22px;padding:3px 12px;background:transparent;border:1.5px solid var(--ink);border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--chip,var(--make))}
+.panel-foot{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
+.clear{background:none;border:0;padding:0;font-size:15px;text-decoration:underline;color:var(--ink-soft)}
+.panel-done{border:0;background:var(--ink);color:#fff;font-size:16px;padding:2px 18px;border-radius:6px}
+
+/* magazine collage background */
+.collage{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;filter:drop-shadow(0 2px 2px rgba(60,35,10,.25))}
+main{z-index:1}
+.collage > *{position:absolute;background-color:var(--bg,#f1ede4);background-image:var(--grain);clip-path:var(--torn)}
+.cl-news{left:-34px;top:3%;width:150px;height:210px;transform:rotate(-8deg);
+  background-image:var(--grain),
+    linear-gradient(#3b3a37,#3b3a37),linear-gradient(#3b3a37,#3b3a37),
+    repeating-linear-gradient(to bottom,transparent 0 6px,rgba(59,58,55,.32) 6px 8px);
+  background-size:auto,70% 11px,50% 7px,82% 70%;background-position:0 0,14px 16px,14px 34px,14px 54px;background-repeat:repeat,no-repeat,no-repeat,no-repeat}
+.cl-dots{--bg:#f2c4cf;right:-24px;top:1%;width:140px;height:120px;transform:rotate(9deg);
+  background-image:var(--grain),radial-gradient(circle,rgba(190,60,95,.45) 1.7px,transparent 2.1px);background-size:auto,8px 8px}
+.cl-graph{--bg:#e3eedf;left:-22px;top:46%;width:118px;height:160px;transform:rotate(6deg);
+  background-image:var(--grain),linear-gradient(rgba(70,130,90,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(70,130,90,.3) 1px,transparent 1px);background-size:auto,12px 12px,12px 12px}
+.cl-music{--bg:#f4efe2;right:-30px;top:52%;width:130px;height:110px;transform:rotate(-7deg);
+  background-image:var(--grain),repeating-linear-gradient(to bottom,transparent 0 30px,rgba(59,58,55,.4) 30px 31px,transparent 31px 35px,rgba(59,58,55,.4) 35px 36px,transparent 36px 40px,rgba(59,58,55,.4) 40px 41px,transparent 41px 45px,rgba(59,58,55,.4) 45px 46px,transparent 46px 50px,rgba(59,58,55,.4) 50px 51px,transparent 51px 64px)}
+.cl-stamp{--bg:#fff;right:22px;top:24%;width:74px;height:90px;transform:rotate(6deg);clip-path:none !important;
+  -webkit-mask:radial-gradient(circle 4px,#0000 96%,#000) -5px -5px/10px 10px,linear-gradient(#000 0 0) 5px 5px/calc(100% - 10px) calc(100% - 10px) no-repeat;
+  mask:radial-gradient(circle 4px,#0000 96%,#000) -5px -5px/10px 10px,linear-gradient(#000 0 0) 5px 5px/calc(100% - 10px) calc(100% - 10px) no-repeat}
+.cl-stamp::after{content:"";position:absolute;inset:10px;background:radial-gradient(circle at 70% 32%,#f7d774 0 9px,transparent 10px),linear-gradient(#f3a683,#e77f67 55%,#6a8caf 56%,#4a6d93)}
+.cl-ticket{--bg:#e9b872;left:4%;bottom:5%;width:150px;height:58px;transform:rotate(9deg);clip-path:none !important;
+  -webkit-mask:radial-gradient(circle 10px at 0 50%,#0000 96%,#000) left/51% 100% no-repeat,radial-gradient(circle 10px at 100% 50%,#0000 96%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 10px at 0 50%,#0000 96%,#000) left/51% 100% no-repeat,radial-gradient(circle 10px at 100% 50%,#0000 96%,#000) right/51% 100% no-repeat;
+  font-family:Georgia,serif;font-size:15px;color:#6b3e14;display:grid;place-items:center;letter-spacing:.06em}
+.cl-ticket::before{content:"admit one";border-top:1px dashed #6b3e14;border-bottom:1px dashed #6b3e14;padding:0 10px}
+.cl-polaroid{--bg:#fff;right:-8px;bottom:12%;width:104px;height:124px;transform:rotate(8deg);clip-path:none !important}
+.cl-polaroid::after{content:"";position:absolute;left:8px;right:8px;top:8px;height:86px;background:linear-gradient(#bfe0ea,#8fc3d6 50%,#e8d3a9 51%,#d9bd8a)}
+.cl-leaf{left:3%;top:30%;width:70px;height:110px;transform:rotate(-20deg);clip-path:none !important;background:none !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 70 110'%3E%3Cpath d='M35 4C10 30 6 70 35 100C64 70 60 30 35 4Z' fill='%238aa66b'/%3E%3Cpath d='M35 8V108M35 40L20 28M35 55L18 44M35 70L22 62M35 40L50 28M35 55L52 44M35 70L48 62' stroke='%235f7a45' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") !important}
+.cl-star{--bg:#f7d774;right:14%;top:13%;width:44px;height:44px;transform:rotate(14deg);clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%) !important}
+.cl-circle{--bg:#a6cfe3;left:12%;top:16%;width:38px;height:38px;border-radius:50%;clip-path:none !important}
+.cl-mag{--bg:#d64545;left:-6px;bottom:24%;width:60px;height:66px;transform:rotate(-6deg);
+  font-family:Georgia,serif;font-weight:700;font-size:52px;line-height:66px;color:#fbf8f1;text-align:center}
+.cl-mag2{--bg:#1f2a55;left:40px;bottom:21%;width:50px;height:58px;transform:rotate(8deg);
+  font-family:Georgia,serif;font-style:italic;font-size:44px;line-height:56px;color:#f7d774;text-align:center}
+.cl-washi1{--bg:#9fc8b7;left:30%;top:-4px;width:120px;height:22px;transform:rotate(-3deg);clip-path:none !important;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.45) 0 6px,transparent 6px 12px) !important}
+.cl-washi2{--bg:#f2b8c6;right:6%;bottom:3%;width:110px;height:20px;transform:rotate(-14deg);clip-path:none !important;
+  background-image:radial-gradient(circle,#fff 2px,transparent 2.5px) !important;background-size:10px 10px !important}
+.cl-kraft2{--bg:#d9bd93;left:-10%;bottom:-6%;width:60%;height:22%;transform:rotate(4deg)}
+.cl-blue{--bg:#dbe7f0;right:-12%;top:68%;width:44%;height:20%;transform:rotate(-6deg);
+  background-image:var(--grain),repeating-linear-gradient(to bottom,transparent 0 13px,#b9cde0 13px 14px)}
+
+/* done scrapbook */
+#doneView{margin-top:22px}
+.book{list-style:none;padding:0;margin:0;display:grid;gap:30px}
+.entry{position:relative;transform:rotate(var(--r,-1.2deg))}
+.entry:nth-child(even){--r:1.4deg}
+.entry .tape{top:-9px;left:calc(50% - 31px);transform:rotate(-4deg)}
+.entry .slip{padding:16px 18px 14px;--bg:var(--c)}
+.entry .text{margin:0;font-size:19px;line-height:26px}
+.entry .num{font-size:14px}
+.entry .note{margin:10px 0 0;padding:8px 14px;font-size:16px;--bg:#fbf8f1;width:88%;margin-left:auto}
+.entry img{display:block;margin:12px auto 0;max-width:78%;background:#fff;padding:8px 8px 26px;box-shadow:0 4px 8px rgba(60,35,10,.3);transform:rotate(2.5deg)}
+.entry .meta{display:flex;justify-content:space-between;margin:6px 4px 0;font-size:14px;color:var(--ink)}
+.undo{background:none;border:0;font-size:14px;text-decoration:underline;color:var(--ink);padding:0}
+.empty{text-align:center;padding:10px 18px;--bg:#fbf8f1}
+.reset{display:block;margin:30px auto 0;background:none;border:1.5px dashed var(--ink);border-radius:8px;font-size:14px;padding:2px 12px;color:var(--ink)}
+
+/* the open chit */
+.overlay{position:fixed;inset:0;background:rgba(40,25,10,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20;overflow-y:auto}
+.overlay.open{display:flex}
+.sheet{width:min(100%,360px)}
+.chit-wrap{filter:drop-shadow(0 16px 18px rgba(30,15,0,.4))}
+.chit{
+  position:relative;padding:34px 26px 38px;transform:rotate(-1.5deg);clip-path:var(--torn);
+  background-color:var(--c,var(--make));
+  background-image:
+    var(--grain),
+    linear-gradient(to bottom,transparent 49.4%,rgba(0,0,0,.1) 49.8%,rgba(255,255,255,.4) 50.4%,transparent 51.5%),
+    linear-gradient(to right,transparent 49.4%,rgba(0,0,0,.08) 49.8%,rgba(255,255,255,.35) 50.4%,transparent 51.5%),
+    radial-gradient(ellipse at 22% 28%,rgba(255,255,255,.35),transparent 55%),
+    radial-gradient(ellipse at 80% 78%,rgba(0,0,0,.08),transparent 60%);
+}
+.overlay.open .chit{animation:unfold .7s cubic-bezier(.2,.9,.3,1.15)}
+@keyframes unfold{
+  0%{transform:scale(.2,.08) rotate(-14deg);opacity:0}
+  35%{transform:scale(.55,.1) rotate(-6deg);opacity:1}
+  65%{transform:scale(1.02,.5) rotate(-2deg)}
+  100%{transform:scale(1,1) rotate(-1.5deg)}
+}
+.chit .no{position:absolute;top:12px;left:20px;font-size:16px}
+.chit .text{font-size:26px;line-height:34px;margin:14px 0 0;text-align:center}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
+.btn{border:0;background:none;padding:0}
+.btn span{display:block;padding:4px 16px;font-size:16px;--bg:#fbf8f1}
+.btn:nth-child(odd){transform:rotate(-1.5deg)} .btn:nth-child(even){transform:rotate(1.5deg)}
+.btn.primary span{--bg:var(--ink);color:#fff;font-weight:700;background-image:none}
+.btn:active{transform:scale(.95)}
+
+.note{margin-top:20px;padding:16px 18px;--bg:#fbf8f1;transform:rotate(.8deg)}
+.note p{margin:0 0 4px;font-weight:700}
+.note textarea{width:100%;border:0;border-bottom:1.5px dashed var(--ink-soft);background:transparent;font-size:17px;line-height:28px;resize:vertical;padding:2px 0}
+.note textarea:focus{outline:none;border-bottom-color:var(--ink)}
+.photo-btn{display:inline-block;margin-top:10px;font-size:15px;text-decoration:underline;cursor:pointer;color:var(--ink-soft)}
+#photoPreview{display:block;max-width:60%;margin:10px 0 0;background:#fff;padding:6px 6px 18px;box-shadow:0 3px 8px rgba(60,35,10,.3)}
+
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) rotate(-1deg);
+  padding:4px 18px;--bg:#fbf8f1;opacity:0;pointer-events:none;transition:opacity .3s;z-index:30;white-space:nowrap
+}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#jar.shake,.overlay.open .chit{animation:none}}
+</style>
+</head>
+<body class="fit">
+<div class="collage" aria-hidden="true">
+  <div class="cl-kraft2"></div><div class="cl-blue"></div>
+  <div class="cl-news"></div><div class="cl-dots"></div><div class="cl-graph"></div><div class="cl-music"></div>
+  <div class="cl-stamp"></div><div class="cl-ticket"></div><div class="cl-polaroid"></div><div class="cl-leaf"></div>
+  <div class="cl-star"></div><div class="cl-circle"></div><div class="cl-mag">a</div><div class="cl-mag2">j</div>
+  <div class="cl-washi1"></div><div class="cl-washi2"></div>
+</div>
+<main>
+  <header aria-label="Aarzoo's jar of tiny adventures">
+    <div class="row">
+      <span class="bit t1 shadow"><span class="paper">Aarzoo's</span></span>
+      <span class="bit t2 shadow"><span class="tape"></span><span class="paper">jar</span></span>
+    </div>
+    <span class="bit t3 shadow"><span class="paper">of tiny adventures</span></span>
+  </header>
+
+
+  <section id="jarView">
+    <div class="stage">
+      <div class="scrap-bg a paper shadow"></div>
+
+      <svg id="jar" viewBox="0 0 240 330" role="button" tabindex="0" aria-label="Shake the jar to pick a chit">
+        <defs>
+          <radialGradient id="studio" cx="50%" cy="45%" r="65%">
+            <stop offset="0" stop-color="#f6f4ef"/><stop offset=".7" stop-color="#e7e3db"/><stop offset="1" stop-color="#d4cfc4"/>
+          </radialGradient>
+          <linearGradient id="glassTint" x1="0" x2="1">
+            <stop offset="0" stop-color="#6f9a9e" stop-opacity=".6"/>
+            <stop offset=".07" stop-color="#cfe4e6" stop-opacity=".35"/>
+            <stop offset=".2" stop-color="#fff" stop-opacity=".06"/>
+            <stop offset=".8" stop-color="#fff" stop-opacity=".04"/>
+            <stop offset=".93" stop-color="#b8d3d6" stop-opacity=".3"/>
+            <stop offset="1" stop-color="#5f8c90" stop-opacity=".6"/>
+          </linearGradient>
+          <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d9ecee" stop-opacity=".55"/><stop offset="1" stop-color="#7fa7ab" stop-opacity=".75"/>
+          </linearGradient>
+          <linearGradient id="metal" x1="0" x2="1">
+            <stop offset="0" stop-color="#7c8186"/><stop offset=".14" stop-color="#e6e9ea"/><stop offset=".3" stop-color="#a9aeb2"/>
+            <stop offset=".48" stop-color="#f6f7f7"/><stop offset=".66" stop-color="#9ca1a5"/><stop offset=".84" stop-color="#d9dcdd"/>
+            <stop offset="1" stop-color="#70757a"/>
+          </linearGradient>
+          <linearGradient id="fold" x1="0" x2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".46" stop-color="#fff" stop-opacity="0"/>
+            <stop offset=".5" stop-color="#000" stop-opacity=".16"/><stop offset=".54" stop-color="#fff" stop-opacity=".22"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+          </linearGradient>
+          <clipPath id="inside"><path d="M64 84 Q44 90 41 114 L37 278 Q37 299 61 300 L179 300 Q203 299 203 278 L199 114 Q196 90 176 84 Z"/></clipPath>
+          <filter id="cutShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#3c230a" flood-opacity=".35"/>
+          </filter>
+          <filter id="soft"><feGaussianBlur stdDeviation=".9"/></filter>
+        </defs>
+
+        <!-- magazine cut-out: white edge + studio backdrop -->
+        <g filter="url(#cutShadow)">
+          <path class="cut" d="M62 78 Q40 84 36 110 L32 278 Q32 306 60 306 L180 306 Q208 306 208 278 L204 110 Q200 84 178 78 Z" fill="#fff" stroke="#fff" stroke-width="14" stroke-linejoin="round"/>
+          <rect class="cut" x="52" y="18" width="136" height="64" rx="8" fill="#fff" stroke="#fff" stroke-width="14" stroke-linejoin="round"/>
+          <path d="M62 78 Q40 84 36 110 L32 278 Q32 306 60 306 L180 306 Q208 306 208 278 L204 110 Q200 84 178 78 Z" fill="url(#studio)"/>
+          <rect x="52" y="18" width="136" height="64" rx="8" fill="url(#studio)"/>
+        </g>
+
+        <!-- paper chits behind the glass -->
+        <g clip-path="url(#inside)" id="pile"></g>
+
+        <!-- glass body -->
+        <path d="M62 78 Q40 84 36 110 L32 278 Q32 306 60 306 L180 306 Q208 306 208 278 L204 110 Q200 84 178 78 Z" fill="url(#glassTint)" stroke="#6e9296" stroke-opacity=".55" stroke-width="1.5"/>
+        <path d="M37 286 Q38 302 60 302 L180 302 Q202 302 203 286 Q200 296 180 296 L60 296 Q40 296 37 286 Z" fill="url(#base)"/>
+        <path d="M58 298 L182 298" stroke="#fff" stroke-opacity=".7" stroke-width="1.2"/>
+        <path d="M48 118 Q42 196 46 272" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" opacity=".75" filter="url(#soft)"/>
+        <path d="M60 122 Q56 190 58 250" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".6"/>
+        <path d="M195 128 Q199 200 195 266" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".45" filter="url(#soft)"/>
+        <path d="M70 92 Q120 82 170 92" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".55" filter="url(#soft)"/>
+
+        <!-- neck with threads -->
+        <path d="M64 60 L176 60 L178 82 Q120 88 62 82 Z" fill="#d5e7e9" fill-opacity=".55" stroke="#6e9296" stroke-opacity=".55" stroke-width="1.2"/>
+        <path d="M63 67 Q120 72 177 67 M63 74 Q120 79 177 74" stroke="#6e9296" stroke-opacity=".5" stroke-width="1.4" fill="none"/>
+        <path d="M68 64 L68 80" stroke="#fff" stroke-width="3" opacity=".7"/>
+
+        <!-- metal lid -->
+        <rect x="54" y="22" width="132" height="42" rx="6" fill="url(#metal)" stroke="#5d6267" stroke-width="1.2"/>
+        <rect x="54" y="22" width="132" height="8" rx="4" fill="#fff" opacity=".35"/>
+        <path d="M54 56 L186 56" stroke="#5d6267" stroke-opacity=".6" stroke-width="1"/>
+        <g stroke="#5d6267" stroke-opacity=".25" stroke-width="1">
+          <path d="M62 31v24M70 31v24M78 31v24M86 31v24M94 31v24M102 31v24M110 31v24M118 31v24M126 31v24M134 31v24M142 31v24M150 31v24M158 31v24M166 31v24M174 31v24"/>
+        </g>
+        <!-- masking tape label on the lid -->
+        <g transform="rotate(-4 120 42)">
+          <rect x="84" y="31" width="72" height="22" fill="#f1e2b0" opacity=".95"/>
+          <text id="tagCount" x="120" y="47" text-anchor="middle" font-family="Special Elite, Courier New, monospace" font-size="15" fill="#1f2a55">100 left</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="count-wrap shadow"><p class="count paper" id="count"></p></div>
+  </section>
+
+  <section id="doneView" hidden>
+    <div class="done-head">
+      <h2>Done so far</h2>
+      <button class="back" id="backToJar">Back to the jar</button>
+    </div>
+    <ul class="book" id="book"></ul>
+    <button class="reset" id="resetBtn">Put every chit back in the jar</button>
+  </section>
+</main>
+
+<div class="overlay" id="overlay" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="chitText">
+    <div class="chit-wrap">
+      <div class="chit" id="chit">
+        <span class="no" id="chitNo"></span>
+        <p class="text" id="chitText"></p>
+      </div>
+    </div>
+    <div class="actions shadow" id="chitActions">
+      <button class="btn primary" id="doneBtn"><span class="paper">I did it</span></button>
+      <button class="btn" id="backBtn"><span class="paper">Put it back</span></button>
+      <button class="btn" id="againBtn"><span class="paper">Pick another</span></button>
+    </div>
+    <div class="shadow" id="notePanel" hidden>
+      <div class="note paper">
+        <p>How did it go?</p>
+        <textarea id="noteText" rows="2" placeholder="A line to remember it by"></textarea>
+        <label class="photo-btn"><span id="photoLabel">Add a photo</span><input type="file" accept="image/*" id="photoInput" hidden></label>
+        <img id="photoPreview" alt="" hidden>
+        <div class="actions">
+          <button class="btn primary" id="saveBtn"><span class="paper">Mark it done</span></button>
+          <button class="btn" id="notYetBtn"><span class="paper">Not yet</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="shadow"><div class="toast paper" id="toast" role="status"></div></div>
+
+<nav class="bar" aria-label="Menu">
+<button class="icon-btn book-btn" id="bookBtn" aria-label="Done chits">
+  <span class="badge" id="doneBadge"></span>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 19a2 2 0 0 1 2-2h13M8.5 9.5l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+<button class="icon-btn label-btn" id="labelBtn" aria-label="Pick by label">
+  <span class="dot"></span>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/></svg>
+</button>
+<button class="icon-btn sound-btn" id="soundBtn" aria-label="Turn sound off">
+  <svg viewBox="0 0 24 24" aria-hidden="true" id="soundIcon"></svg>
+</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-hidden="true" aria-label="Pick by label">
+  <div class="sheet-in paper">
+    <h2>Pick by label</h2>
+    <div id="groups"></div>
+    <div class="panel-foot">
+      <button class="clear" id="clearBtn">Clear all</button>
+      <button class="panel-done" id="panelDone">Done</button>
+    </div>
+  </div>
+  <button class="panel-close" id="panelClose" aria-label="Close">×</button>
+</aside>
+
+<script>
+/* ---------- YOUR CHITS ----------
+   [number, text, effort (1 easy / 2 some / 3 big), time, where, company, kind]
+   time: q = under an hour, h = a few hours, d = a day or more, o = over many sessions
+   Labels are only used for picking; they never show on the chit. */
+const CHITS = [
+ [1,"Go for a 5-senses nature walk",1,"q","out","solo","explore"],
+ [2,"VIBGYOR photo walk",1,"h","out","solo","explore"],
+ [3,"Learn a dance routine and record the final",2,"o","in","solo","move"],
+ [4,"Record and post a song cover, end to end",3,"o","in","solo","make"],
+ [5,"Do a complicated hairstyle",2,"q","in","solo","care"],
+ [6,"Learn how to apply a winged eyeliner",1,"q","in","solo","care"],
+ [7,"Make a comic strip: fiction",2,"h","in","solo","make"],
+ [8,"Get a voice-over gig",3,"o","in","social","dare"],
+ [9,"Post a sleep-aid video on YouTube",2,"h","in","solo","make"],
+ [10,"Learn a belly dancing routine",2,"o","in","solo","move"],
+ [11,"Finish a letter workbook with your left hand",2,"o","in","solo","learn"],
+ [12,"Learn a song on the keyboard",2,"o","in","solo","learn"],
+ [13,"Cook a fancy dessert",2,"h","in","solo","make"],
+ [14,"Cook yourself a fancy meal",2,"h","in","solo","care"],
+ [15,"Make a DIY home decor piece",2,"h","in","solo","make"],
+ [16,"Make 5 bookmarks and gift them",2,"h","in","social","make"],
+ [17,"Complete 1 book and write a review",2,"o","in","solo","learn"],
+ [18,"Make a 'life at 30' vision board",2,"h","in","solo","make"],
+ [19,"Fix any 1 thing at home",2,"h","in","solo","care"],
+ [20,"Fancy date with self",2,"d","out","solo","care"],
+ [21,"Ask out a stranger",3,"q","out","social","dare"],
+ [22,"Learn the basics of calligraphy",2,"o","in","solo","learn"],
+ [23,"Write and send a letter",1,"h","in","social","connect"],
+ [24,"Read a short book or story in Punjabi",2,"h","in","solo","learn"],
+ [25,"Write a poem in Urdu",2,"h","in","solo","make"],
+ [26,"Write a poem in Punjabi",2,"h","in","solo","make"],
+ [27,"Write a poem in English",1,"h","in","solo","make"],
+ [28,"Make a light bulb circuit",2,"h","in","solo","learn"],
+ [29,"Call someone without asking first",1,"q","in","social","connect"],
+ [30,"Do a 5K run",2,"q","out","solo","move"],
+ [31,"Do a 10K run",3,"h","out","solo","move"],
+ [32,"Complete a HIIT workout from YouTube",2,"q","in","solo","move"],
+ [33,"DIY air-dry clay earrings",2,"h","in","solo","make"],
+ [34,"Do nail art on your own",1,"q","in","solo","care"],
+ [35,"Host a social event (games or movie)",3,"h","in","social","connect"],
+ [36,"Do a self-portrait photoshoot",2,"h","in","solo","make"],
+ [37,"Collect and paint rocks",2,"h","out","solo","make"],
+ [38,"Collect and paint leaves",1,"h","out","solo","make"],
+ [39,"Give a compliment to 5 strangers",2,"q","out","social","dare"],
+ [40,"Deep dive into a history topic",2,"h","in","solo","learn"],
+ [41,"Deep dive into a science topic",2,"h","in","solo","learn"],
+ [42,"Deep dive into a medicine topic",2,"h","in","solo","learn"],
+ [43,"Deep dive into a geography topic",2,"h","in","solo","learn"],
+ [44,"Do a random weekend solo trip",3,"d","out","solo","explore"],
+ [45,"Follow a YouTube recipe to the T",2,"h","in","solo","make"],
+ [46,"Overdress and go out, deliberately uncomfortable",2,"h","out","solo","dare"],
+ [47,"Complete an adult puzzle book",1,"o","in","solo","learn"],
+ [48,"Learn the Rubik's cube",2,"o","in","solo","learn"],
+ [49,"DIY flowers for home",2,"h","in","solo","make"],
+ [50,"DIY lamp for home",3,"h","in","solo","make"],
+ [51,"Do a short story audio recording",2,"h","in","solo","make"],
+ [52,"Record and post a lullaby",2,"h","in","solo","make"],
+ [53,"Collect 5 wild flowers",1,"q","out","solo","explore"],
+ [54,"Embroider a tiny something",2,"h","in","solo","make"],
+ [55,"DIY mandala for home",2,"h","in","solo","make"],
+ [56,"Write a letter to your future self",1,"q","in","solo","care"],
+ [57,"Cook something you've never eaten",2,"h","in","solo","explore"],
+ [58,"Do a workout challenge with a friend",2,"o","in","social","move"],
+ [59,"Make a comic strip: real life",2,"h","in","solo","make"],
+ [60,"Send a postcard to someone",1,"q","out","social","connect"],
+ [61,"Respond to ALL unread messages",1,"h","in","social","connect"],
+ [62,"Deep clean any 1 room",2,"h","in","solo","care"],
+ [63,"Do an in-house fashion show!",1,"h","in","solo","make"],
+ [64,"Dance for 30 mins",1,"q","in","solo","move"],
+ [65,"Apply a face pack",1,"q","in","solo","care"],
+ [66,"Do a champi",1,"q","in","solo","care"],
+ [67,"Be by a waterbody for an hour",1,"h","out","solo","explore"],
+ [68,"Send 5 cold emails to orgs or people",2,"h","in","social","dare"],
+ [69,"Buy yourself flowers",1,"q","out","solo","care"],
+ [70,"Make a 2026 photo journal",2,"o","in","solo","make"],
+ [71,"Make a 2027 vision board",2,"h","in","solo","make"],
+ [72,"Sing loud and bad in private",1,"q","in","solo","care"],
+ [73,"Dance crazy and bad in private",1,"q","in","solo","move"],
+ [74,"Do a no-phone hour",1,"q","in","solo","care"],
+ [75,"Do a no-phone evening",2,"h","in","solo","care"],
+ [76,"Do a no-phone day",3,"d","in","solo","care"],
+ [77,"Make and share 3 fancy drinks",2,"h","in","social","make"],
+ [78,"Do a silly hairstyle for the whole day",1,"d","out","solo","dare"],
+ [79,"Design 3 tattoos",2,"h","in","solo","make"],
+ [80,"Doodle a full page!",1,"q","in","solo","make"],
+ [81,"Complete a colouring page",1,"q","in","solo","make"],
+ [82,"Make a watercolour painting",2,"h","in","solo","make"],
+ [83,"Make an Urdu quote poster",2,"h","in","solo","make"],
+ [84,"Make a Punjabi quote poster",2,"h","in","solo","make"],
+ [85,"Make a Hindi quote poster",2,"h","in","solo","make"],
+ [86,"Make an English quote poster",1,"h","in","solo","make"],
+ [87,"Attend a random workshop",2,"h","out","social","explore"],
+ [88,"Attend a random music show",1,"h","out","social","explore"],
+ [89,"Attend a random theatre show",1,"h","out","social","explore"],
+ [90,"Watch the sunset",1,"q","out","solo","explore"],
+ [91,"Watch the sunrise",2,"q","out","solo","explore"],
+ [92,"Go for a massage",1,"h","out","solo","care"],
+ [93,"Write a stand-up bit",2,"h","in","solo","make"],
+ [94,"Doodle-journal your day",1,"q","in","solo","make"],
+ [95,"Finish a book without breaking the streak",2,"o","in","solo","learn"],
+ [96,"Follow a yoga video completely",1,"q","in","solo","move"],
+ [97,"Follow a guided meditation completely",1,"q","in","solo","care"],
+ [98,"Go on a walk on an unknown route",1,"h","out","solo","explore"],
+ [99,"Write a comedy short story",2,"h","in","solo","make"],
+ [100,"Do 1 touristy thing in your city",2,"h","out","solo","explore"]
+];
+
+const LABELS = {
+  c:{name:"Kind",opts:{make:"Make",move:"Move",learn:"Learn",care:"Care",connect:"Connect",explore:"Explore",dare:"Dare"}},
+  e:{name:"Effort",opts:{"1":"Easy","2":"Some effort","3":"Big effort"}},
+  t:{name:"Time",opts:{q:"Under an hour",h:"A few hours",d:"A day or more",o:"Over many sessions"}},
+  p:{name:"Where",opts:{in:"Indoor",out:"Outdoor"}},
+  s:{name:"Company",opts:{solo:"Solo",social:"With people"}}
+};
+
+const chits = CHITS.map(([id,text,e,t,p,s,c]) => ({id,text,e:String(e),t,p,s,c}));
+const KEY = "chitjar.done.v1", ACTIVE_KEY = "chitjar.active.v1", SOUND_KEY = "chitjar.sound.v1";
+const $ = s => document.querySelector(s);
+const filters = Object.fromEntries(Object.keys(LABELS).map(k => [k,new Set()]));
+let current = null, pendingPhoto = null;
+let done = load();
+let soundOn = (() => { try{ return localStorage.getItem(SOUND_KEY) !== "off"; }catch(e){ return true; } })();
+
+function load(){
+  let d = {};
+  try{ d = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){}
+  for (const k in d) if (typeof d[k] === "string") d[k] = {date:d[k]};
+  return d;
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(done)); }
+function trySave(){ try{ save(); }catch(e){} }
+function setActive(id){ try{ id ? localStorage.setItem(ACTIVE_KEY,String(id)) : localStorage.removeItem(ACTIVE_KEY); }catch(e){} }
+function getActive(){ try{ return Number(localStorage.getItem(ACTIVE_KEY)) || null; }catch(e){ return null; } }
+
+const anyFilter = () => Object.values(filters).some(f => f.size);
+const matches = c => Object.keys(filters).every(k => !filters[k].size || filters[k].has(c[k]));
+const inJar = () => chits.filter(c => !done[c.id]);
+const eligible = () => inJar().filter(matches);
+const rnd = n => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); };
+
+/* ---------- paper sounds (made in the browser, no files needed) ---------- */
+let actx, noise;
+function audio(){
+  if (!actx){
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    actx = new AC();
+    noise = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+  }
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+/* lots of tiny filtered noise clicks = paper crinkle */
+function crinkle(start, dur, grains, freq, vol){
+  const a = audio(); if (!a) return;
+  for (let i = 0; i < grains; i++){
+    const t = a.currentTime + start + Math.random()*dur;
+    const len = .006 + Math.random()*.045;
+    const src = a.createBufferSource(); src.buffer = noise;
+    const bp = a.createBiquadFilter(); bp.type = "bandpass";
+    bp.frequency.value = freq*(.55 + Math.random()); bp.Q.value = .7 + Math.random()*1.6;
+    const g = a.createGain(), peak = vol*(.25 + Math.random()*.75);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + .002);
+    g.gain.exponentialRampToValueAtTime(.0005, t + len);
+    src.connect(bp).connect(g).connect(a.destination);
+    src.start(t, Math.random()*.9, len + .02);
+  }
+}
+/* a soft airy swish under the crinkle */
+function swish(start, dur, vol){
+  const a = audio(); if (!a) return;
+  const t = a.currentTime + start;
+  const src = a.createBufferSource(); src.buffer = noise;
+  const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1800;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + dur*.3); g.gain.linearRampToValueAtTime(0, t + dur);
+  src.connect(hp).connect(g).connect(a.destination);
+  src.start(t, 0, dur + .05);
+}
+function shakeSound(){ [0,.13,.27,.4,.5].forEach(s => { crinkle(s, .07, 14, 2600, .35); swish(s, .12, .05); }); }
+function unfoldSound(at){ crinkle(at, .55, 85, 3200, .5); crinkle(at + .1, .3, 25, 1500, .35); swish(at, .6, .07); }
+
+const ICON_ON = '<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>';
+const ICON_OFF = '<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
+function paintSound(){
+  $("#soundIcon").innerHTML = soundOn ? ICON_ON : ICON_OFF;
+  $("#soundBtn").setAttribute("aria-label", soundOn ? "Turn sound off" : "Turn sound on");
+}
+paintSound();
+$("#soundBtn").onclick = () => {
+  soundOn = !soundOn;
+  try{ localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); }catch(e){}
+  paintSound();
+  if (soundOn) crinkle(0, .2, 20, 3000, .4);
+};
+
+/* label panel */
+function openPanel(o){
+  $("#panel").classList.toggle("open", o); $("#scrim").classList.toggle("open", o);
+  $("#panel").setAttribute("aria-hidden", !o);
+}
+$("#labelBtn").onclick = () => openPanel(true);
+$("#panelClose").onclick = $("#panelDone").onclick = $("#scrim").onclick = () => openPanel(false);
+
+/* ---------- label filters ---------- */
+function buildFilters(){
+  const wrap = $("#groups");
+  for (const [key,g] of Object.entries(LABELS)){
+    const div = document.createElement("div"); div.className = "group";
+    div.innerHTML = `<h3>${g.name}</h3>`;
+    const chips = document.createElement("div"); chips.className = "chips";
+    for (const [val,label] of Object.entries(g.opts)){
+      const b = document.createElement("button");
+      b.className = "chip"; b.textContent = label; b.setAttribute("aria-pressed","false");
+      if (key === "c") b.style.setProperty("--chip",`var(--${val})`);
+      b.onclick = () => {
+        filters[key].has(val) ? filters[key].delete(val) : filters[key].add(val);
+        b.setAttribute("aria-pressed", filters[key].has(val)); render();
+      };
+      chips.appendChild(b);
+    }
+    div.appendChild(chips); wrap.appendChild(div);
+  }
+}
+$("#clearBtn").onclick = () => {
+  Object.values(filters).forEach(f => f.clear());
+  document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed","false")); render();
+};
+
+/* ---------- the jar: folded paper chits settled in a pile ---------- */
+function chitSVG(c, x, y, rot, op){
+  const w = 50, h = 30, j = k => ((rnd(c.id*7 + k) - .5) * 3).toFixed(1);
+  const d = `M${-w/2+ +j(1)} ${-h/2+ +j(2)} L${w/2+ +j(3)} ${-h/2+ +j(4)} L${w/2+ +j(5)} ${h/2+ +j(6)} L${-w/2+ +j(7)} ${h/2+ +j(8)} Z`;
+  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot})" opacity="${op}">
+    <path d="${d}" fill="var(--${c.c})" stroke="#5a3d1e" stroke-opacity=".35" stroke-width=".7"/>
+    <path d="${d}" fill="url(#fold)"/>
+    <path d="M0 ${-h/2+1} L${j(9)/3} ${h/2-1}" stroke="#000" stroke-opacity=".14" stroke-width=".8"/>
+  </g>`;
+}
+/* about one paper shown for every three chits, so the papers can be big */
+function renderJar(){
+  const order = (a,b) => rnd(a.id+11) - rnd(b.id+11);
+  const left = inJar();
+  const shown = left.length ? Math.max(Math.min(left.length,3), Math.ceil(left.length * .32)) : 0;
+  const fit = left.filter(matches).sort(order), rest = left.filter(c => !matches(c)).sort(order);
+  const pile = fit.concat(rest).slice(0, shown).sort((a,b) => rnd(a.id+21) - rnd(b.id+21));
+  const cols = 4;
+  $("#pile").innerHTML = pile.map((c,i) => {
+    const row = Math.floor(i/cols), col = i % cols;
+    const x = 64 + col*37 + (row % 2 ? 18 : 0) + (rnd(c.id+3) - .5)*12;
+    const y = 284 - row*21 + (rnd(c.id+5) - .5)*9;
+    const rot = Math.round((rnd(c.id+9) - .5) * (rnd(c.id+13) > .8 ? 170 : 70));
+    return chitSVG(c, x, y, rot, matches(c) ? 1 : .25);
+  }).join("");
+  $("#tagCount").textContent = left.length ? `${left.length} left` : "empty!";
+}
+
+function render(){
+  renderJar();
+  const left = inJar().length, n = eligible().length;
+  let msg;
+  if (!left) msg = "The jar is empty. You did all 100.";
+  else if (!anyFilter()) msg = "Tap the jar to shake out a chit";
+  else if (!n) msg = "No chits left for these labels";
+  else msg = `${n} chits fit these labels`;
+  $("#count").textContent = msg;
+  const nDone = Object.keys(done).length;
+  $("#doneBadge").textContent = nDone; $("#bookBtn").classList.toggle("has", nDone > 0);
+  $("#labelBtn").classList.toggle("on", anyFilter());
+  renderBook();
+}
+
+/* ---------- picking ---------- */
+function pick(){
+  const pool = eligible(); if (!pool.length) return;
+  const options = pool.length > 1 && current ? pool.filter(c => c.id !== current.id) : pool;
+  const c = options[Math.floor(Math.random() * options.length)];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const delay = reduce ? 0 : .6;
+  if (soundOn){ if (!reduce) shakeSound(); unfoldSound(delay); }
+  const jar = $("#jar");
+  jar.classList.remove("shake"); void jar.getBoundingClientRect(); if (!reduce) jar.classList.add("shake");
+  setTimeout(() => showChit(c), delay*1000);
+}
+function showChit(c){
+  current = c; setActive(c.id);
+  $("#chit").style.setProperty("--c",`var(--${c.c})`);
+  $("#chitNo").textContent = `${c.id}.`;
+  $("#chitText").textContent = c.text;
+  resetNote();
+  const ov = $("#overlay");
+  ov.classList.remove("open"); void ov.offsetWidth;
+  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
+  $("#doneBtn").focus();
+}
+function closeChit(){ setActive(null); $("#overlay").classList.remove("open"); $("#overlay").setAttribute("aria-hidden","true"); }
+function resetNote(){
+  pendingPhoto = null; $("#noteText").value = ""; $("#photoInput").value = "";
+  $("#photoPreview").hidden = true; $("#photoLabel").textContent = "Add a photo";
+  $("#notePanel").hidden = true; $("#chitActions").hidden = false;
+}
+function toast(t){
+  const el = $("#toast"); el.textContent = t; el.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2400);
+}
+
+$("#jar").onclick = () => { if (eligible().length) pick(); };
+$("#jar").onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && eligible().length){ e.preventDefault(); pick(); } };
+$("#doneBtn").onclick = () => { $("#chitActions").hidden = true; $("#notePanel").hidden = false; $("#noteText").focus(); };
+$("#notYetBtn").onclick = resetNote;
+$("#backBtn").onclick = () => { if (soundOn) crinkle(0, .25, 30, 2600, .4); closeChit(); toast("Back in the jar"); };
+$("#againBtn").onclick = () => { closeChit(); pick(); };
+
+$("#photoInput").onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const max = 520, k = Math.min(1, max / Math.max(img.width, img.height));
+    const cv = document.createElement("canvas");
+    cv.width = Math.round(img.width*k); cv.height = Math.round(img.height*k);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    pendingPhoto = cv.toDataURL("image/jpeg", .62);
+    $("#photoPreview").src = pendingPhoto; $("#photoPreview").hidden = false;
+    $("#photoLabel").textContent = "Change photo";
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
+};
+
+$("#saveBtn").onclick = () => {
+  const entry = {date:new Date().toISOString()};
+  const note = $("#noteText").value.trim();
+  if (note) entry.note = note;
+  if (pendingPhoto) entry.photo = pendingPhoto;
+  done[current.id] = entry;
+  let msg = "Done. It's out of the jar.";
+  try{ save(); }
+  catch(e){
+    delete entry.photo;
+    try{ save(); msg = "Saved, but there's no space left for photos"; }
+    catch(e2){ delete done[current.id]; toast("Couldn't save. Storage is full."); return; }
+  }
+  closeChit(); render(); toast(msg);
+};
+
+/* ---------- done scrapbook ---------- */
+function renderBook(){
+  const book = $("#book"); book.innerHTML = "";
+  const items = Object.entries(done).sort((a,b) => b[1].date.localeCompare(a[1].date));
+  $("#resetBtn").hidden = !items.length;
+  if (!items.length){ book.innerHTML = `<li class="shadow"><div class="empty paper">Nothing here yet. Pick a chit and do it.</div></li>`; return; }
+  items.forEach(([id,d]) => {
+    const c = chits.find(x => x.id == id); if (!c) return;
+    const li = document.createElement("li"); li.className = "entry";
+    li.innerHTML = `<span class="tape"></span><div class="shadow"><div class="slip paper" style="--c:var(--${c.c})"><span class="num">${c.id}.</span><p class="text"></p></div></div>`;
+    li.querySelector(".text").textContent = c.text;
+    if (d.note){ const w = document.createElement("div"); w.className = "shadow"; w.innerHTML = `<p class="note paper"></p>`; w.firstChild.textContent = d.note; li.appendChild(w); }
+    if (d.photo){ const im = document.createElement("img"); im.src = d.photo; im.alt = ""; im.loading = "lazy"; li.appendChild(im); }
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.innerHTML = `<span>${new Date(d.date).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</span>`;
+    const u = document.createElement("button"); u.className = "undo"; u.textContent = "put back in jar";
+    u.onclick = () => { if ((!d.note && !d.photo) || confirm("Your note and photo for this chit will be deleted.")){ delete done[id]; trySave(); render(); } };
+    meta.appendChild(u); li.appendChild(meta); book.appendChild(li);
+  });
+}
+$("#resetBtn").onclick = () => {
+  if (confirm("Put all done chits back in the jar? Notes and photos will be deleted.")){ done = {}; trySave(); render(); }
+};
+
+/* ---------- tabs ---------- */
+function showView(v){
+  document.body.classList.toggle("fit", v === "jar");
+  $("#jarView").hidden = v !== "jar"; $("#doneView").hidden = v !== "done";
+  $("#bookBtn").setAttribute("aria-pressed", v === "done");
+  window.scrollTo(0,0);
+}
+$("#bookBtn").onclick = () => showView($("#doneView").hidden ? "done" : "jar");
+$("#backToJar").onclick = () => showView("jar");
+
+buildFilters(); render();
+const activeId = getActive();
+const active = activeId && !done[activeId] && chits.find(c => c.id === activeId);
+if (active) showChit(active); else setActive(null);
+</script>
+</body>
+</html>
